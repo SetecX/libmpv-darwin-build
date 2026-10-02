@@ -1,113 +1,54 @@
 name: ci
 
-on: [push, pull_request]
+# IptvGuide fork: builds only the macOS universal video xcframeworks that
+# media_kit_libs_macos_video consumes (default flavor + the closed-caption
+# decoder + patches/ffmpeg-ccaption-default-first-field.patch). A tag
+# publishes it as a release asset.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
 
 jobs:
-  ci:
-    name: ci
-    runs-on: macos-13
+  macos:
+    runs-on: macos-14
+    timeout-minutes: 300
     permissions:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install requirements
         run: brew install go meson ninja nasm
 
       - name: Print tool versions
-        run: make tool-versions
+        run: make tool-versions || true
 
       - name: Determine version
         id: version
         run: |
           case "${GITHUB_REF}" in
-          refs/tags/*)
-            VERSION=${GITHUB_REF#refs/tags/}
-            ;;
-          *)
-            VERSION=develop
-            ;;
+          refs/tags/*) VERSION=${GITHUB_REF#refs/tags/} ;;
+          *) VERSION=develop ;;
           esac
-
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo ${VERSION}
 
       - name: Build
-        # macOS runners have unknown resource limits (timeout or number of open
-        # files…) that prevent the execution of a single Makefile rule that
-        # manages all builds. So the time per rule must be limited.
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          make build/output/libmpv-libs_${VERSION}_ios-arm64-audio-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_ios-arm64-audio-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_ios-arm64-audio-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_ios-arm64-video-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_ios-arm64-video-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_ios-arm64-video-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-amd64-audio-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-amd64-audio-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-amd64-audio-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-amd64-video-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-amd64-video-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-amd64-video-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-arm64-audio-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-arm64-audio-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-arm64-audio-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-arm64-video-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-arm64-video-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-arm64-video-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-universal-audio-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-universal-audio-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-universal-audio-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-universal-video-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-universal-video-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_iossimulator-universal-video-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-amd64-audio-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-amd64-audio-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-amd64-audio-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-amd64-video-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-amd64-video-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-amd64-video-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-arm64-audio-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-arm64-audio-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-arm64-audio-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-arm64-video-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-arm64-video-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-arm64-video-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-universal-audio-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-universal-audio-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-universal-audio-encodersgpl.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-universal-video-default.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-universal-video-full.tar.gz
-          make build/output/libmpv-libs_${VERSION}_macos-universal-video-encodersgpl.tar.gz
-          make build/output/libmpv-xcframeworks_${VERSION}_ios-universal-audio-default.tar.gz
-          make build/output/libmpv-xcframeworks_${VERSION}_ios-universal-audio-full.tar.gz
-          make build/output/libmpv-xcframeworks_${VERSION}_ios-universal-audio-encodersgpl.tar.gz
-          make build/output/libmpv-xcframeworks_${VERSION}_ios-universal-video-default.tar.gz
-          make build/output/libmpv-xcframeworks_${VERSION}_ios-universal-video-full.tar.gz
-          make build/output/libmpv-xcframeworks_${VERSION}_ios-universal-video-encodersgpl.tar.gz
-          make build/output/libmpv-xcframeworks_${VERSION}_macos-universal-audio-default.tar.gz
-          make build/output/libmpv-xcframeworks_${VERSION}_macos-universal-audio-full.tar.gz
-          make build/output/libmpv-xcframeworks_${VERSION}_macos-universal-audio-encodersgpl.tar.gz
           make build/output/libmpv-xcframeworks_${VERSION}_macos-universal-video-default.tar.gz
-          make build/output/libmpv-xcframeworks_${VERSION}_macos-universal-video-full.tar.gz
-          make build/output/libmpv-xcframeworks_${VERSION}_macos-universal-video-encodersgpl.tar.gz
-          make build/output/debug.zip
+          shasum -a 256 build/output/*.tar.gz
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          path: |
-            build/output/debug.zip
-            build/output/*.tar.gz
+          path: build/output/*.tar.gz
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           fail_on_unmatched_files: true
-          files: |
-            build/output/debug.zip
-            build/output/*.tar.gz
+          files: build/output/*.tar.gz

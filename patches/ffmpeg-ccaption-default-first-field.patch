@@ -1,0 +1,20 @@
+ccaption_dec: default data_field to the first field (CC1)
+
+"auto" locks onto the field of the very first cc_data pair it sees,
+before validation and from its low bit only, so a CEA-708 packet-start
+pair (cc_type 3) or field-2 data at the start of a live stream or after
+a seek selects field 2: CC3/CC4 (often a second language) and XDS,
+shown as text. mpv cannot pass decoder options to subtitle decoders, so
+the default is changed. Used by IptvGuide (SetecX/IptvGuide).
+
+--- a/libavcodec/ccaption_dec.c	2026-10-02 09:25:25
++++ b/libavcodec/ccaption_dec.c	2026-10-02 09:25:35
+@@ -930,7 +930,7 @@
+ static const AVOption options[] = {
+     { "real_time", "emit subtitle events as they are decoded for real-time display", OFFSET(real_time), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, SD },
+     { "real_time_latency_msec", "minimum elapsed time between emitting real-time subtitle events", OFFSET(real_time_latency_msec), AV_OPT_TYPE_INT, { .i64 = 200 }, 0, 500, SD },
+-    { "data_field", "select data field", OFFSET(data_field), AV_OPT_TYPE_INT, { .i64 = -1 }, -1, 1, SD, "data_field" },
++    { "data_field", "select data field", OFFSET(data_field), AV_OPT_TYPE_INT, { .i64 = 0 }, -1, 1, SD, "data_field" },
+     { "auto",   "pick first one that appears", 0, AV_OPT_TYPE_CONST, { .i64 =-1 }, 0, 0, SD, "data_field" },
+     { "first",  NULL, 0, AV_OPT_TYPE_CONST, { .i64 = 0 }, 0, 0, SD, "data_field" },
+     { "second", NULL, 0, AV_OPT_TYPE_CONST, { .i64 = 1 }, 0, 0, SD, "data_field" },

@@ -210,6 +210,8 @@ video_default_options = [
     '--enable-decoder=vplayer',
     '--enable-decoder=webvtt',
     '--enable-decoder=movtext',
+    # IptvGuide: US broadcast closed captions (EIA-608/CEA-708 in A53 side data).
+    '--enable-decoder=ccaption',
 
     # parsers
     '--enable-parser=h263',
