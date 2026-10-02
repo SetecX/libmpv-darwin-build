@@ -20,7 +20,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install requirements
-        run: brew install go meson ninja nasm
+        run: |
+          brew install go ninja nasm
+          # v0.6.0 pins meson 1.2.1 (.tool-versions)
+          pip3 install --break-system-packages --user meson==1.2.1
+          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
 
       # v0.6.0 pins cmake 3.27.5 (.tool-versions); the image's cmake 4.x
       # dropped compatibility the bundled CMakeLists rely on.
